@@ -31,15 +31,81 @@ It compiles with the C# compiler that already ships inside Windows.
 
 ## Contents
 
+- [Download and run](#download-and-run)
 - [What it does](#what-it-does)
 - [What it does *not* stop](#what-it-does-not-stop) ← **read this first**
-- [Install](#install)
 - [How it works](#how-it-works)
 - [Design notes](#design-notes)
 - [Verified behaviour](#verified-behaviour)
 - [Troubleshooting](#troubleshooting)
 - [Contributing](#contributing)
 - [License](#license)
+
+---
+
+## Download and run
+
+### Option 1 — download the zip (no tools needed)
+
+1. Go to **[releases](https://github.com/tamimlabs/TimeLock/releases)** and
+   download the latest `TimeLock-v*.zip`.
+2. Extract it anywhere (Desktop is fine).
+3. **Double-click `install\Install.cmd`** and accept the administrator prompt.
+4. Open **TimeLock** from the Start Menu, pick a duration, press **Start lock**.
+
+To remove it later: double-click `install\Uninstall.cmd`.
+
+> Windows may show a SmartScreen "unrecognized publisher" warning. Choose
+> **More info → Run anyway**. That appears for any program that isn't
+> code-signed.
+
+### Option 2 — one line from PowerShell
+
+Run this in **PowerShell as Administrator**. It downloads the latest release,
+extracts it and installs:
+
+```powershell
+$ProgressPreference = 'SilentlyContinue'
+$zip = "$env:TEMP\TimeLock.zip"
+Invoke-WebRequest "https://github.com/tamimlabs/TimeLock/releases/latest/download/TimeLock-latest.zip" -OutFile $zip
+$dir = "$env:TEMP\TimeLock"
+Remove-Item $dir -Recurse -Force -ErrorAction SilentlyContinue
+Expand-Archive $zip $dir -Force
+& "$dir\install\Install.ps1"
+```
+
+### Option 3 — clone and build it yourself
+
+You only need Windows; no Visual Studio, no .NET SDK, no NuGet, no `dotnet`
+CLI. The project compiles with the C# compiler that already ships inside
+Windows.
+
+```
+git clone https://github.com/tamimlabs/TimeLock.git
+cd TimeLock
+build.cmd
+powershell -ExecutionPolicy Bypass -File install\Install.ps1
+```
+
+Or on one line from PowerShell:
+
+```powershell
+git clone https://github.com/tamimlabs/TimeLock.git
+cd TimeLock
+.\build.cmd
+.\install\Install.ps1
+```
+
+**Where things get installed**
+
+| Path | What |
+| --- | --- |
+| `C:\Program Files\TimeLock\` | the three executables |
+| `C:\ProgramData\TimeLock\state.json` | the lock timer (read-only for normal users) |
+| Scheduled task `TimeLock.Enforce` | runs as `SYSTEM` at logon, at boot, and every minute |
+| Start Menu + Desktop | a **TimeLock** shortcut |
+
+After installing, open **TimeLock** from the Start Menu.
 
 ---
 
@@ -99,32 +165,10 @@ defend a machine from someone who is genuinely set on getting in.
 
 ---
 
-## Install
+## What the installer does
 
-**Requirements:** Windows 10 or 11. No other software, no SDK.
-
-```
-git clone https://github.com/tamimlabs/TimeLock.git
-cd TimeLock
-build.cmd
-powershell -ExecutionPolicy Bypass -File install\Install.ps1
-```
-
-Open **TimeLock** from the Start Menu, pick a duration, press **Start lock**.
-
-Download the CI artifact for `bin\*.exe` if you would rather not build.
-
-### Uninstall
-
-```
-powershell -ExecutionPolicy Bypass -File install\Uninstall.ps1
-```
-
-Removes the scheduled task, the program folder, the shortcuts and the Start Menu
-entry, and restores the shell policy. It will ask whether to delete your
-settings and logs too.
-
-### What the installer does
+**Requirements:** Windows 10 or 11. Nothing else — no SDK, no runtime, no
+third-party tools.
 
 | Step | Detail |
 | --- | --- |
@@ -135,7 +179,10 @@ settings and logs too.
 | Restores shell policy | puts `Winlogon\AutoRestartShell` back to `1` |
 | Adds shortcuts | Start Menu and Desktop |
 
-The installer is safe to run more than once.
+It is safe to run more than once.
+
+Uninstalling removes the scheduled task, the program folder, the shortcuts and
+the shell-policy change, then asks whether to delete your settings and logs.
 
 ---
 

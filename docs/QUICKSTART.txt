@@ -1,0 +1,60 @@
+=====================================================================
+ TimeLock - quick start
+=====================================================================
+
+ WHAT THIS IS
+    A timed lock for a Windows laptop. Pick a duration, press one
+    button, and the computer is locked until the timer runs out --
+    including across restarts.
+
+
+ HOW TO INSTALL
+    1. Extract this zip somewhere (Desktop is fine).
+    2. Double-click  install\Install.cmd
+    3. Accept the "allow administrator" prompt. That is required to
+       register the Windows scheduled task that enforces the lock.
+    4. When it finishes, open TimeLock from the Start Menu.
+
+    If Windows SmartScreen warns about an unknown publisher, choose
+    "More info" then "Run anyway". This happens for any program that
+    is not code-signed.
+
+
+ HOW TO USE
+    Open TimeLock, choose a duration (or click a preset like 2h),
+    optionally type a message, then press "Start lock".
+
+    The computer locks immediately. When the timer reaches zero it
+    unlocks by itself.
+
+
+ TO REMOVE IT
+    Double-click  install\Uninstall.cmd
+
+
+ WHAT IT CANNOT DO
+    This is a focus tool, not a security product. It cannot block:
+
+      * Ctrl+Alt+Del  (the kernel handles this; no app can intercept it)
+      * Safe Mode
+      * Holding the power button to force the machine off
+      * Someone booting Windows PE / a USB stick (unless BitLocker is on)
+
+    And because you installed it as an administrator, you can always
+    remove it. For a lock the operating system itself enforces, use
+    Windows 11 Pro's Assigned Access (kiosk mode).
+
+
+ MORE INFORMATION
+    https://github.com/tamimlabs/TimeLock
+
+    Troubleshooting: run this from an administrator PowerShell prompt
+
+        & "$env:ProgramFiles\TimeLock\TimeLock.Enforce.exe" --status
+
+    Logs live in
+
+        C:\ProgramData\TimeLock\enforcer.log
+        %LOCALAPPDATA%\TimeLock\client.log
+
+=====================================================================
