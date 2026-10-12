@@ -1,0 +1,39 @@
+# Build output -- regenerate with build.cmd
+bin/
+*.exe
+*.dll
+*.pdb
+
+# Python bytecode (tools/make_logo.py)
+__pycache__/
+*.py[cod]
+
+# Local diagnostics / logs
+*.log
+TimeLockDump*.txt
+*.dump
+
+# Editor / IDE
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# OS
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# Never commit a real lock state or anything machine-specific
+ProgramData/
+state.json
+
+# Security scanners often flag these paths even though nothing secret lives here
+*.pfx
+*.pem
+*.key

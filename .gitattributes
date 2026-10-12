@@ -1,0 +1,28 @@
+# Normalise line endings so the repo diffs cleanly on every platform.
+
+* text=auto
+
+# C# sources: LF is fine, but be explicit and stable.
+*.cs      text eol=crlf
+*.csproj  text eol=crlf
+
+# Windows scripts MUST have CRLF -- cmd.exe cannot parse LF-only batch files,
+# which is a silent, very confusing failure.
+*.cmd     text eol=crlf
+*.bat     text eol=crlf
+*.ps1     text eol=crlf
+
+# Markup and docs conventionally use LF.
+*.md      text eol=lf
+*.yml     text eol=lf
+*.yaml    text eol=lf
+*.gitignore    text eol=lf
+*.gitattributes text eol=lf
+LICENSE   text eol=lf
+
+# Binary assets.
+*.png     binary
+*.jpg     binary
+*.ico     binary
+*.exe     binary
+*.dll     binary

@@ -1,0 +1,87 @@
+name: build
+
+# The whole point of this project is that it compiles with the C# compiler that
+# ships inside Windows. No SDK, no NuGet, no dotnet CLI -- so CI needs nothing
+# installed either. This workflow proves that stays true.
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build on windows-latest
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Report toolchain
+        shell: pwsh
+        run: |
+          Write-Host "OS        : $env:RUNNER_OS"
+          $os = Get-CimInstance Win32_OperatingSystem
+          Write-Host "Image     : $($os.Caption) $($os.Version)"
+          $csc = "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
+          if (-not (Test-Path $csc)) {
+            $csc = "$env:WINDIR\Microsoft.NET\Framework\v4.0.30319\csc.exe"
+          }
+          if (-not (Test-Path $csc)) {
+            throw "csc.exe not found -- this runner cannot build the project."
+          }
+          Write-Host "Compiler  : $csc"
+          (& $csc /help) 2>&1 | Select-String -Pattern 'C#' | Select-Object -First 1
+
+      - name: Compile
+        shell: cmd
+        run: build.cmd
+
+      - name: Verify output
+        shell: pwsh
+        run: |
+          $expected = @(
+            'TimeLock.Client.exe',
+            'TimeLock.Enforce.exe',
+            'TimeLock.App.exe'
+          )
+          $missing = @()
+          foreach ($f in $expected) {
+            $p = Join-Path "$PWD\bin" $f
+            if (-not (Test-Path $p)) { $missing += $f; continue }
+            $len = (Get-Item $p).Length
+            if ($len -lt 4096) { $missing += "$f (suspiciously small: $len bytes)" }
+            Write-Host ("  {0,-24} {1,8:N0} bytes" -f $f, $len)
+          }
+          if ($missing.Count -gt 0) {
+            Write-Error "Build did not produce: $($missing -join ', ')"
+            exit 1
+          }
+          Write-Host 'All three executables built.'
+
+      - name: Smoke test (no lock active -> must exit immediately)
+        shell: pwsh
+        run: |
+          # With no active lock the enforcer and client must both decline to
+          # do anything. Anything else means a lock could appear uninvited.
+          foreach ($exe in @('TimeLock.Enforce.exe', 'TimeLock.Client.exe')) {
+            $p = Start-Process -FilePath ".\bin\$exe" -WorkingDirectory .\bin `
+                   -Wait -PassThru -WindowStyle Hidden
+            Write-Host ("  {0,-24} exit={1}" -f $exe, $p.ExitCode)
+            if ($p.ExitCode -ne 0) {
+              Write-Error "$exe exited with $($p.ExitCode) when no lock was active"
+              exit 1
+            }
+          }
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: TimeLock-binaries
+          path: bin/*.exe
+          if-no-files-found: error
+          retention-days: 30
